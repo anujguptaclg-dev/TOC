@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grammar String Deriver | Regular Grammar BFS Derivation & Tree Visualizer</title>
+  <meta name="description" content="Verify whether a target string can be generated within N derivation steps using a Right-Linear Regular Grammar, with interactive derivation tree and step-by-step walkthrough.">
+  
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="dark-theme">
+  <!-- Main Header -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="header-brand">
+        <div class="brand-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="6" cy="6" r="3"></circle>
+            <circle cx="6" cy="18" r="3"></circle>
+            <circle cx="18" cy="12" r="3"></circle>
+            <line x1="8.5" y1="7.5" x2="15.5" y2="10.5"></line>
+            <line x1="8.5" y1="16.5" x2="15.5" y2="13.5"></line>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1 class="brand-title">Grammar String Deriver</h1>
+          <p class="brand-subtitle">Verify whether a target string can be generated within N derivation steps.</p>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <div class="preset-wrapper">
+          <label for="preset-select" class="preset-label">Presets:</label>
+          <select id="preset-select" class="preset-dropdown" title="Choose a curated regular grammar example"></select>
+        </div>
+        <button id="btn-how-it-works" class="btn btn-outline" title="Learn theory and how the algorithm works">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+          <span>How It Works</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Alert Container for Warnings and Errors -->
+  <div class="alert-wrapper">
+    <div id="alert-container" class="alert-container"></div>
+  </div>
+
+  <!-- Main Content Layout -->
+  <main class="main-layout">
+    <!-- Left Column: Input Card -->
+    <aside class="sidebar-col">
+      <div class="card input-card">
+        <div class="card-header">
+          <div class="card-title-group">
+            <h2 class="card-title">Grammar Configuration</h2>
+            <span class="card-subtitle">Right-linear regular grammar rules</span>
+          </div>
+          <button id="btn-load-example" class="btn btn-ghost btn-sm" title="Load the required example grammar">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+            Load Example
+          </button>
+        </div>
+
+        <div class="card-body">
+          <!-- Grammar Rules Textarea -->
+          <div class="form-group">
+            <div class="form-label-row">
+              <label for="grammar-rules" class="form-label">
+                Production Rules <span class="required">*</span>
+              </label>
+              <!-- Symbol Quick Insert Toolbar -->
+              <div class="quick-insert-bar" title="Click to insert symbol into grammar rules">
+                <span class="insert-label">Insert:</span>
+                <button type="button" class="insert-symbol-btn" data-symbol=" → " title="Right Arrow">">→</button>
+                <button type="button" class="insert-symbol-btn" data-symbol=" | " title="Alternative (OR)">|</button>
+                <button type="button" class="insert-symbol-btn" data-symbol="ε" title="Epsilon (empty string)">ε</button>
+                <button type="button" class="insert-symbol-btn" data-symbol="S" title="Non-terminal S">S</button>
+                <button type="button" class="insert-symbol-btn" data-symbol="A" title="Non-terminal A">A</button>
+                <button type="button" class="insert-symbol-btn" data-symbol="B" title="Non-terminal B">B</button>
+              </div>
+            </div>
+            
+            <div class="textarea-wrapper">
+              <textarea 
+                id="grammar-rules" 
+                class="form-textarea code-font" 
+                rows="7" 
+                spellcheck="false" 
+                placeholder="Enter rules e.g.:&#10;S → aA | bB | a&#10;A → aS | b&#10;B → bS | a"
+              ></textarea>
+            </div>
+            <p class="form-help-text">Supports <code>→</code> or <code>-></code>, pipe <code>|</code>, and epsilon <code>ε</code> (or <code>eps</code>).</p>
+          </div>
+
+          <!-- Grammar Summary Badges -->
+          <div class="grammar-stats-strip">
+            <div class="stat-pill" title="Detected Non-Terminal Variables">
+              <span class="stat-pill-label">V (Variables):</span>
+              <span id="badge-non-terminals" class="stat-pill-val mono">S, A, B</span>
+            </div>
+            <div class="stat-pill" title="Detected Terminals Alphabet">
+              <span class="stat-pill-label">Σ (Alphabet):</span>
+              <span id="badge-terminals" class="stat-pill-val mono">a, b</span>
+            </div>
+            <div class="stat-pill" title="Total Production Rules">
+              <span class="stat-pill-label">Rules:</span>
+              <span id="badge-productions" class="stat-pill-val mono">6</span>
+            </div>
+          </div>
+
+          <!-- Inputs Grid: Start Symbol, Target String, Max Steps -->
+          <div class="inputs-grid">
+            <!-- Start Symbol -->
+            <div class="form-group">
+              <label for="start-symbol" class="form-label">
+                Start Symbol <span class="required">*</span>
+              </label>
+              <input 
+                type="text" 
+                id="start-symbol" 
+                class="form-input code-font" 
+                value="S" 
+                maxlength="5" 
+                placeholder="S" 
+              />
+            </div>
+
+            <!-- Target String -->
+            <div class="form-group">
+              <div class="form-label-row">
+                <label for="target-string" class="form-label">
+                  Target String
+                </label>
+                <button type="button" id="btn-target-epsilon" class="chip-action-btn" title="Set empty string (ε)">
+                  Set ε
+                </button>
+              </div>
+              <input 
+                type="text" 
+                id="target-string" 
+                class="form-input code-font" 
+                value="ab" 
+                placeholder="e.g. ab (or leave empty for ε)" 
+              />
+            </div>
+          </div>
+
+          <!-- Maximum Steps (N) -->
+          <div class="form-group">
+            <div class="form-label-row">
+              <label for="max-steps" class="form-label">
+                Maximum Derivation Steps (N) <span class="required">*</span>
+              </label>
+              <div class="step-chips">
+                <button type="button" class="step-pill-btn" data-steps="3">3</button>
+                <button type="button" class="step-pill-btn" data-steps="5">5</button>
+                <button type="button" class="step-pill-btn" data-steps="8">8</button>
+                <button type="button" class="step-pill-btn" data-steps="12">12</button>
+              </div>
+            </div>
+
+            <div class="stepper-input-wrapper">
+              <button type="button" id="btn-step-dec" class="stepper-btn" title="Decrease steps">−</button>
+              <input 
+                type="number" 
+                id="max-steps" 
+                class="form-input stepper-input code-font" 
+                value="3" 
+                min="1" 
+                max="30" 
+              />
+              <button type="button" id="btn-step-inc" class="stepper-btn" title="Increase steps">+</button>
+            </div>
+            <p class="form-help-text">BFS search will strictly limit exploration to depth ≤ N.</p>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="action-buttons-group">
+            <button id="btn-derive" class="btn btn-primary btn-glow" title="Run BFS derivation search (Ctrl + Enter)">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+              <span>Derive String</span>
+            </button>
+            <button id="btn-clear" class="btn btn-secondary" title="Clear all input fields">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"></path><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path></svg>
+              <span>Clear</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Guidance Card -->
+      <div class="card guidance-mini-card">
+        <h3 class="mini-card-title">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+          Right-Linear Regular Grammar
+        </h3>
+        <p class="mini-card-text">
+          Allowed production rules:
+        </p>
+        <ul class="mini-rules-list">
+          <li><code>A → aB</code> (Terminal followed by Non-terminal)</li>
+          <li><code>A → a</code> (Pure terminal string)</li>
+          <li><code>A → ε</code> (Empty string / epsilon transition)</li>
+        </ul>
+      </div>
+    </aside>
+
+    <!-- Right Column: Results & Visualizer Area -->
+    <section class="content-col">
+      <!-- Result Summary Card -->
+      <div id="result-card" class="card result-card card-state-success">
+        <div class="result-header">
+          <div class="result-status-group">
+            <span id="result-status-badge" class="status-tag tag-success">✓ String Generated</span>
+            <div id="result-explanation" class="result-explanation-text">
+              The target string "ab" was successfully derived in 2 steps (within N = 3).
+            </div>
+          </div>
+          <div class="derivation-copy-box">
+            <div class="derivation-string-preview">
+              <span class="preview-label">Derivation:</span>
+              <span id="derivation-string-display" class="preview-val mono">S ⇒ aA ⇒ ab</span>
+            </div>
+            <button id="btn-copy-derivation" class="btn btn-sm btn-ghost" title="Copy derivation sequence to clipboard">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+              <span>Copy</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Metrics Grid -->
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <span class="metric-title">Target String</span>
+            <span id="result-target-val" class="metric-value mono">ab</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-title">Steps Used</span>
+            <span id="result-steps-val" class="metric-value metric-highlight mono">2</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-title">Max Allowed (N)</span>
+            <span id="result-max-steps-val" class="metric-value mono">3</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-title">Max Depth Explored</span>
+            <span id="result-depth-val" class="metric-value mono">2 / 3</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-title">Search Space</span>
+            <span id="result-nodes-val" class="metric-value mono">7 states</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Visualization Tabs Container -->
+      <div class="card visualizer-card">
+        <!-- Tab Navigation Bar -->
+        <div class="tab-nav-bar">
+          <button class="tab-btn active" data-tab="tab-derivation-tree">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="6" y1="3" x2="6" y2="15"></line><circle cx="18" cy="6" r="3"></circle><circle cx="6" cy="18" r="3"></circle><path d="M18 9a9 9 0 0 1-9 9"></path></svg>
+            <span>Derivation Tree</span>
+          </button>
+          <button class="tab-btn" data-tab="tab-parse-tree">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="3"></circle><line x1="12" y1="8" x2="6" y2="15"></line><line x1="12" y1="8" x2="18" y2="15"></line><circle cx="6" cy="17" r="2"></circle><circle cx="18" cy="17" r="2"></circle></svg>
+            <span>Parse Tree (Syntax)</span>
+          </button>
+          <button class="tab-btn" data-tab="tab-step-by-step">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
+            <span>Step-by-Step Derivation</span>
+          </button>
+          <button class="tab-btn" data-tab="tab-formal-spec">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            <span>Formal Grammar Spec</span>
+          </button>
+        </div>
+
+        <!-- Tab 1: Derivation Tree -->
+        <div id="tab-derivation-tree" class="tab-pane active">
+          <div id="derivation-tree-container" class="tree-mount-container"></div>
+        </div>
+
+        <!-- Tab 2: Parse Tree -->
+        <div id="tab-parse-tree" class="tab-pane">
+          <div id="parse-tree-container" class="tree-mount-container"></div>
+        </div>
+
+        <!-- Tab 3: Step-by-Step Walkthrough -->
+        <div id="tab-step-by-step" class="tab-pane">
+          <div class="step-walkthrough-wrapper">
+            <!-- Step Player Control Header -->
+            <div class="step-player-toolbar">
+              <div class="player-controls">
+                <button id="btn-step-prev" class="player-btn" title="Previous step">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                  <span>Prev</span>
+                </button>
+                <button id="btn-step-play" class="player-btn player-btn-primary" title="Play step-by-step derivation animation">
+                  <span>▶ Play</span>
+                </button>
+                <button id="btn-step-next" class="player-btn" title="Next step">
+                  <span>Next</span>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </button>
+              </div>
+
+              <div class="slider-group">
+                <input type="range" id="step-slider" min="0" max="2" value="0" class="step-slider" />
+                <span id="step-counter-label" class="step-counter-label">Step 0 of 2</span>
+              </div>
+            </div>
+
+            <!-- Sequence List Cards -->
+            <div id="step-sequence-list" class="step-sequence-list"></div>
+          </div>
+        </div>
+
+        <!-- Tab 4: Formal Grammar Spec -->
+        <div id="tab-formal-spec" class="tab-pane">
+          <div id="grammar-spec-content" class="formal-spec-pane"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Educational "How It Works" Modal -->
+  <div id="modal-how-it-works" class="modal-backdrop hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title-group">
+          <h2 class="modal-title">How Grammar String Derivation Works</h2>
+          <p class="modal-subtitle">Theory of Computation • Regular Grammars & Bounded BFS Search</p>
+        </div>
+        <button id="modal-close" class="modal-close-btn">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="edu-section">
+          <h3>Execution Workflow</h3>
+          <ol class="edu-step-list">
+            <li>
+              <strong>1. Enter a regular grammar:</strong> Specify non-terminals, terminals, and right-linear productions of the form <code>A → aB</code>, <code>A → a</code>, or <code>A → ε</code>.
+            </li>
+            <li>
+              <strong>2. Enter the target string:</strong> Provide the word $w \in \Sigma^*$ you wish to test (e.g. <code>ab</code>, or empty string <code>ε</code>).
+            </li>
+            <li>
+              <strong>3. Set maximum derivation steps N:</strong> Restrict the search depth to at most $N$ production applications.
+            </li>
+            <li>
+              <strong>4. Start from the start symbol:</strong> BFS begins exploration with the sentential form equal to the designated start variable (e.g. $S$).
+            </li>
+            <li>
+              <strong>5. Explore possible derivations:</strong> At every step, the algorithm replaces the leftmost non-terminal using all applicable production rules, generating all valid successor sentential forms.
+            </li>
+            <li>
+              <strong>6. Termination conditions:</strong> The search halts immediately when:
+              <ul>
+                <li>The target string is generated (shortest derivation found via BFS), OR</li>
+                <li>All search branches either reach the $N$-step limit, dead-end, or are pruned due to terminal prefix mismatch.</li>
+              </ul>
+            </li>
+            <li>
+              <strong>7. Derivation tree visualization:</strong> The resulting state-space tree shows every explored branch, highlights the winning derivation path in emerald green, and flags pruned branches.
+            </li>
+          </ol>
+        </div>
+
+        <div class="edu-section">
+          <h3>Key Concepts</h3>
+          <div class="edu-cards-grid">
+            <div class="edu-concept-card">
+              <h4>Regular Grammar</h4>
+              <p>A regular grammar is a formal grammar whose productions are restricted to right-linear ($A \to aB \mid a \mid \varepsilon$) or left-linear ($A \to Ba \mid a \mid \varepsilon$) forms. It generates exactly the class of regular languages recognized by Finite Automata (DFA/NFA).</p>
+            </div>
+            <div class="edu-concept-card">
+              <h4>Derivation & Sentential Form</h4>
+              <p>A derivation is a sequence of rule applications $S \Rightarrow \alpha_1 \Rightarrow \alpha_2 \dots \Rightarrow w$. Any intermediate string $\alpha_i \in (V \cup \Sigma)^*$ containing non-terminals is called a <em>sentential form</em>.</p>
+            </div>
+            <div class="edu-concept-card">
+              <h4>N-Step Limit & BFS</h4>
+              <p>Because grammars can contain recursive rules (e.g. $S \to aS$) that create infinite derivation paths, Breadth-First Search (BFS) combined with an $N$-step bound guarantees shortest derivation discovery and terminates safely.</p>
+            </div>
+            <div class="edu-concept-card">
+              <h4>Prefix Pruning</h4>
+              <p>In right-linear grammars, generated terminals form a prefix that can never be undone. If the terminal prefix of a sentential form does not match the target string's prefix, the branch is safely pruned without missing any valid derivation.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
