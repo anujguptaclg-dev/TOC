@@ -1,14 +1,14 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/schema.json",
   "build": {
-    "beforeBuildCommand": "npm run build",
-    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "",
+    "beforeDevCommand": "",
     "devPath": "http://localhost:3000",
     "distDir": "../"
   },
   "package": {
-    "productName": "Grammar String Deriver",
-    "version": "0.1.0"
+    "productName": "Grammar_String_Deriver",
+    "version": "1.0.0"
   },
   "tauri": {
     "allowlist": {
@@ -29,7 +29,7 @@
         "icons/icon.icns",
         "icons/icon.ico"
       ],
-      "identifier": "com.tauri.dev",
+      "identifier": "com.grammarstringderiver.app",
       "longDescription": "",
       "macOS": {
         "entitlements": null,
@@ -40,7 +40,7 @@
       },
       "resources": [],
       "shortDescription": "",
-      "targets": "all",
+      "targets": ["nsis"],
       "windows": {
         "certificateThumbprint": null,
         "digestAlgorithm": "sha256",

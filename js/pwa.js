@@ -15,12 +15,12 @@ if (installBtn) {
     console.log('Install button clicked - initiating desktop installer download');
     
     // Direct the user to the GitHub release URL for the Windows installer
-    const installerUrl = "https://github.com/anujguptaclg-dev/TOC/releases/latest/download/Grammar_String_Deriver_Installer.exe";
+    const installerUrl = "https://github.com/anujguptaclg-dev/TOC/releases/latest/download/Grammar_String_Deriver_1.0.0_x64_setup.exe";
     
     // Create a temporary link to trigger the download
     const link = document.createElement('a');
     link.href = installerUrl;
-    link.download = 'Grammar_String_Deriver_Installer.exe';
+    link.download = 'Grammar_String_Deriver_1.0.0_x64_setup.exe';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
