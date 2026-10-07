@@ -1,0 +1,22 @@
+{
+  "name": "Grammar String Deriver",
+  "short_name": "Deriver",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "theme_color": "#121214",
+  "background_color": "#121214",
+  "description": "Verify whether a target string can be generated within N derivation steps using a Right-Linear Regular Grammar.",
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

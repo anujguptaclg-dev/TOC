@@ -1,0 +1,22 @@
+{
+  "name": "toc",
+  "version": "1.0.0",
+  "description": "An interactive, educational web application for Theory of Computation (TOC) that verifies whether a target string can be generated from a right-linear regular grammar within a maximum number of derivation steps $N$.",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/anujguptaclg-dev/TOC.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/anujguptaclg-dev/TOC/issues"
+  },
+  "homepage": "https://github.com/anujguptaclg-dev/TOC#readme"
+}
