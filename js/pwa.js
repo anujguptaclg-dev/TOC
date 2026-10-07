@@ -1,3 +1,5 @@
+console.log("PWA JS VERSION: 2026-10-08-FIX-2");
+
 // Register Service Worker
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
@@ -18,8 +20,18 @@ const installBtn = document.getElementById('btn-install-app');
 
 // Check if app is already installed/running in standalone mode
 const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+
+// Initially hide only if we are running in standalone mode
 if (isStandalone && installBtn) {
   installBtn.classList.add('hidden');
+}
+
+if ('getInstalledRelatedApps' in navigator) {
+  navigator.getInstalledRelatedApps().then((relatedApps) => {
+    if (relatedApps.length > 0 && installBtn) {
+      installBtn.classList.add('hidden');
+    }
+  }).catch(() => {});
 }
 
 window.addEventListener('beforeinstallprompt', (e) => {
@@ -32,10 +44,15 @@ window.addEventListener('beforeinstallprompt', (e) => {
 
 if (installBtn) {
   installBtn.addEventListener('click', async () => {
+    console.log('Install button clicked');
+    
     if (!deferredPrompt) {
-      alert("Automatic installation is not supported by your current browser.\n\nPlease use the \"Install\" or \"Add to Home Screen\" option found in your browser's main menu to install the application.");
+      console.log('No deferred install prompt available');
+      alert("This app may already be installed. You can also use Chrome's menu \u2192 Install page as app.");
       return;
     }
+    
+    console.log('Deferred install prompt available');
     
     // Show the install prompt
     deferredPrompt.prompt();
@@ -44,7 +61,7 @@ if (installBtn) {
     const { outcome } = await deferredPrompt.userChoice;
     if (outcome === 'accepted') {
       console.log('User accepted the install prompt');
-      installBtn.classList.add('hidden');
+      if (installBtn) installBtn.classList.add('hidden');
     } else {
       console.log('User dismissed the install prompt');
     }
@@ -55,8 +72,10 @@ if (installBtn) {
 }
 
 window.addEventListener('appinstalled', (evt) => {
-  console.log('App was installed');
+  console.log('App installed');
   if (installBtn) {
     installBtn.classList.add('hidden');
   }
+  // clear the saved deferred prompt
+  deferredPrompt = null;
 });
