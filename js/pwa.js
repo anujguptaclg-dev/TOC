@@ -1,81 +1,32 @@
-console.log("PWA JS VERSION: 2026-10-08-FIX-2");
+console.log("PWA JS VERSION: TAURI-DESKTOP-UPDATE");
 
-// Register Service Worker
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').then(
-      (registration) => {
-        console.log('ServiceWorker registration successful with scope: ', registration.scope);
-      },
-      (err) => {
-        console.log('ServiceWorker registration failed: ', err);
-      }
-    );
-  });
-}
+// Check if running inside Tauri
+const isTauri = window.__TAURI__ !== undefined || navigator.userAgent.includes('Tauri');
 
-// Handle PWA Installation
-let deferredPrompt;
 const installBtn = document.getElementById('btn-install-app');
 
-// Check if app is already installed/running in standalone mode
-const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-
-// Initially hide only if we are running in standalone mode
-if (isStandalone && installBtn) {
+// If running inside the installed Tauri app, hide the install button
+if (isTauri && installBtn) {
   installBtn.classList.add('hidden');
 }
 
-if ('getInstalledRelatedApps' in navigator) {
-  navigator.getInstalledRelatedApps().then((relatedApps) => {
-    if (relatedApps.length > 0 && installBtn) {
-      installBtn.classList.add('hidden');
-    }
-  }).catch(() => {});
-}
-
-window.addEventListener('beforeinstallprompt', (e) => {
-  console.log('beforeinstallprompt fired');
-  // Prevent Chrome 67 and earlier from automatically showing the prompt
-  e.preventDefault();
-  // Stash the event so it can be triggered later.
-  deferredPrompt = e;
-});
-
 if (installBtn) {
-  installBtn.addEventListener('click', async () => {
-    console.log('Install button clicked');
+  installBtn.addEventListener('click', () => {
+    console.log('Install button clicked - initiating desktop installer download');
     
-    if (!deferredPrompt) {
-      console.log('No deferred install prompt available');
-      alert("This app may already be installed. You can also use Chrome's menu \u2192 Install page as app.");
-      return;
-    }
+    // Direct the user to the GitHub release URL for the Windows installer
+    const installerUrl = "https://github.com/anujguptaclg-dev/TOC/releases/latest/download/Grammar_String_Deriver_Installer.exe";
     
-    console.log('Deferred install prompt available');
+    // Create a temporary link to trigger the download
+    const link = document.createElement('a');
+    link.href = installerUrl;
+    link.download = 'Grammar_String_Deriver_Installer.exe';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
     
-    // Show the install prompt
-    deferredPrompt.prompt();
-    
-    // Wait for the user to respond to the prompt
-    const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === 'accepted') {
-      console.log('User accepted the install prompt');
-      if (installBtn) installBtn.classList.add('hidden');
-    } else {
-      console.log('User dismissed the install prompt');
-    }
-    
-    // Clear the deferredPrompt variable
-    deferredPrompt = null;
+    // Optional fallback message in case the browser blocks automatic downloads
+    alert("Downloading the Windows installer...\n\nIf the download doesn't start automatically, please visit our GitHub Releases page at: https://github.com/anujguptaclg-dev/TOC/releases");
   });
 }
 
-window.addEventListener('appinstalled', (evt) => {
-  console.log('App installed');
-  if (installBtn) {
-    installBtn.classList.add('hidden');
-  }
-  // clear the saved deferred prompt
-  deferredPrompt = null;
-});
